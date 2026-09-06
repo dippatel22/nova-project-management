@@ -1,69 +1,128 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import { useNova } from '../hooks/useNova';
+import Sidebar from '../components/Sidebar';
+import Header from '../components/Header';
+import Dashboard from '../components/Dashboard';
+import Projects from '../components/Projects';
+import TasksBoard from '../components/TasksBoard';
+import TeamMembers from '../components/TeamMembers';
+import CreateProjectModal from '../components/modals/CreateProjectModal';
+import CreateTaskModal from '../components/modals/CreateTaskModal';
+import InviteMemberModal from '../components/modals/InviteMemberModal';
+import TaskDetailsModal from '../components/modals/TaskDetailsModal';
+
+export default function Page() {
+  const nova = useNova();
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <div className="min-h-screen bg-slate-50 font-sans text-slate-900 flex flex-col md:flex-row antialiased">
+      
+      <Sidebar
+        activeTab={nova.activeTab}
+        setActiveTab={nova.setActiveTab}
+        projectCount={nova.projects.length}
+        taskCount={nova.tasks.length}
+      />
+
+      <main className="flex-1 flex flex-col min-w-0 overflow-y-auto">
+        
+        <Header
+          activeTab={nova.activeTab}
+          searchQuery={nova.searchQuery}
+          setSearchQuery={nova.setSearchQuery}
+          onNewTask={() => nova.setIsTaskModalOpen(true)}
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
+
+        <div className="p-6 max-w-7xl w-full mx-auto">
+
+          {/* Dashboard */}
+          {nova.activeTab === 'dashboard' && (
+            <Dashboard
+              projects={nova.projects}
+              tasks={nova.tasks}
+              activities={nova.activities}
+              completedTasksCount={nova.completedTasksCount}
+              pendingTasksCount={nova.pendingTasksCount}
+              completionRate={nova.completionRate}
+              onNewProject={() => nova.setIsProjectModalOpen(true)}
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+          )}
+
+          {/* Projects */}
+          {nova.activeTab === 'projects' && (
+            <Projects
+              projects={nova.projects}
+              tasks={nova.tasks}
+              onNewProject={() => nova.setIsProjectModalOpen(true)}
+              onDeleteProject={nova.deleteProject}
+            />
+          )}
+
+          {/* Tasks */}
+          {nova.activeTab === 'tasks' && (
+            <TasksBoard
+              projects={nova.projects}
+              tasks={nova.filteredTasks}
+              statusFilter={nova.taskStatusFilter}
+              setStatusFilter={nova.setTaskStatusFilter}
+              projectFilter={nova.selectedProjectFilter}
+              setProjectFilter={nova.setSelectedProjectFilter}
+              onNewTask={() => nova.setIsTaskModalOpen(true)}
+              onUpdateStatus={nova.updateTaskStatus}
+              onDelete={nova.deleteTask}
+              onSelect={nova.setActiveTaskDetails}
+            />
+          )}
+
+          {/* Team */}
+          {nova.activeTab === 'team' && (
+            <TeamMembers
+              members={nova.members}
+              onInvite={() => nova.setIsMemberModalOpen(true)}
+              onDeleteMember={nova.deleteMember}
+            />
+          )}
+
         </div>
       </main>
+
+      {/* Create Project Modal */}
+      <CreateProjectModal
+        open={nova.isProjectModalOpen}
+        value={nova.newProject}
+        setValue={nova.setNewProject}
+        onClose={() => nova.setIsProjectModalOpen(false)}
+        onSubmit={nova.createProject}
+      />
+
+      {/* Create Task Modal */}
+      <CreateTaskModal
+        open={nova.isTaskModalOpen}
+        value={nova.newTask}
+        setValue={nova.setNewTask}
+        projects={nova.projects}
+        members={nova.members}
+        onClose={() => nova.setIsTaskModalOpen(false)}
+        onSubmit={nova.createTask}
+      />
+
+      {/* Invite Member Modal */}
+      <InviteMemberModal
+        open={nova.isMemberModalOpen}
+        value={nova.newMember}
+        setValue={nova.setNewMember}
+        onClose={() => nova.setIsMemberModalOpen(false)}
+        onSubmit={nova.addMember}
+      />
+
+      {/* Task Details Modal */}
+      <TaskDetailsModal
+        task={nova.activeTaskDetails}
+        onClose={() => nova.setActiveTaskDetails(null)}
+        onDelete={nova.deleteTask}
+      />
+
     </div>
   );
 }
